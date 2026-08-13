@@ -1,188 +1,196 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
-import { ActivityIndicator, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Image, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function OcrDemo() {
-  // State to manage the scanning animation and results
   const [isScanning, setIsScanning] = useState(false);
-  const [scanComplete, setScanComplete] = useState(false);
+  const [hasScanned, setHasScanned] = useState(false);
 
   const handleScan = () => {
     setIsScanning(true);
-    setScanComplete(false);
-
-    // Simulate the AI processing time (2.5 seconds)
+    // Simulate OCR processing time
     setTimeout(() => {
       setIsScanning(false);
-      setScanComplete(true);
-    }, 2500);
-  };
-
-  const resetDemo = () => {
-    setIsScanning(false);
-    setScanComplete(false);
+      setHasScanned(true);
+    }, 2000);
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.header}>Live AI Ticket Extraction</Text>
-      <Text style={styles.subHeader}>Watch the system digitize handwritten field data in seconds.</Text>
-      
-      {/* Mock Ticket Image Area */}
-      <View style={styles.imagePlaceholder}>
-        <Image 
-          source={require('../assets/images/ticket-sample.jpg')} 
-          style={styles.ticketImage} 
-          resizeMode="cover" 
-        />
+    <View style={styles.card}>
+      <View style={styles.header}>
+        <Ionicons name="scan-circle" size={24} color="#0284c7" />
+        <Text style={styles.title}>Live OCR Extraction</Text>
       </View>
+      
+      <Text style={styles.description}>
+        Watch how TEPUY QC instantly digitizes crumpled, stained paper tickets from the field.
+      </Text>
 
-      {/* Initial State: Show Scan Button */}
-      {!scanComplete && !isScanning && (
-        <TouchableOpacity style={styles.button} onPress={handleScan}>
-          <Text style={styles.buttonText}>Scan Demo Ticket</Text>
-        </TouchableOpacity>
-      )}
-
-      {/* Loading State: Show Spinner */}
-      {isScanning && (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#2563eb" />
-          <Text style={styles.loadingText}>Running optical character recognition...</Text>
+      <View style={styles.demoArea}>
+        <View style={styles.imageContainer}>
+          {/* THE CRITICAL PATH FIX IS RIGHT HERE: ../../ */}
+          <Image 
+            source={require('../../assets/images/ticket-sample.jpg')} 
+            style={styles.ticketImage}
+            resizeMode="cover"
+          />
         </View>
-      )}
 
-      {/* Success State: Show Extracted Data */}
-      {scanComplete && (
-        <View style={styles.resultsContainer}>
-          <Text style={styles.resultsHeader}>Data Extracted Successfully</Text>
-          
-          <View style={styles.table}>
-            <View style={styles.dataRow}>
-              <Text style={styles.label}>Truck No:</Text>
-              <Text style={styles.value}>42</Text>
+        <View style={styles.actionContainer}>
+          {!hasScanned && !isScanning && (
+            <TouchableOpacity style={styles.scanButton} onPress={handleScan}>
+              <Ionicons name="scan" size={20} color="#ffffff" />
+              <Text style={styles.scanButtonText}>Extract Data</Text>
+            </TouchableOpacity>
+          )}
+
+          {isScanning && (
+            <View style={styles.scanningState}>
+              <ActivityIndicator size="small" color="#0284c7" />
+              <Text style={styles.scanningText}>Processing via Cloud Vision...</Text>
             </View>
-            <View style={styles.dataRow}>
-              <Text style={styles.label}>Slump:</Text>
-              <Text style={styles.value}>4.5 in</Text>
+          )}
+
+          {hasScanned && (
+            <View style={styles.resultsContainer}>
+              <View style={styles.resultBadge}>
+                <Text style={styles.resultLabel}>Ticket:</Text>
+                <Text style={styles.resultValue}>TC-99420</Text>
+              </View>
+              <View style={styles.resultBadge}>
+                <Text style={styles.resultLabel}>Slump:</Text>
+                <Text style={styles.resultValue}>4.5 in</Text>
+              </View>
+              <View style={styles.resultBadge}>
+                <Text style={styles.resultLabel}>Truck:</Text>
+                <Text style={styles.resultValue}>#42</Text>
+              </View>
+              
+              <TouchableOpacity style={styles.resetButton} onPress={() => setHasScanned(false)}>
+                <Ionicons name="refresh" size={16} color="#64748b" />
+                <Text style={styles.resetText}>Reset</Text>
+              </TouchableOpacity>
             </View>
-            <View style={styles.dataRow}>
-              <Text style={styles.label}>Air Content:</Text>
-              <Text style={styles.value}>6.2 %</Text>
-            </View>
-            <View style={styles.dataRow}>
-              <Text style={styles.label}>Time Batched:</Text>
-              <Text style={styles.value}>08:15 AM</Text>
-            </View>
-          </View>
-          
-          <TouchableOpacity style={styles.resetButton} onPress={resetDemo}>
-            <Text style={styles.resetButtonText}>Reset Demo</Text>
-          </TouchableOpacity>
+          )}
         </View>
-      )}
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 24,
-    backgroundColor: '#ffffff',
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 5,
-    maxWidth: 500,
-    width: '100%',
-    alignSelf: 'center',
-    marginVertical: 20,
+  card: { 
+    backgroundColor: '#ffffff', 
+    borderRadius: 12, 
+    padding: 24, 
+    width: '100%', 
+    maxWidth: 700, 
+    shadowColor: '#000', 
+    shadowOffset: { width: 0, height: 2 }, 
+    shadowOpacity: 0.05, 
+    shadowRadius: 15, 
+    elevation: 3, 
+    borderWidth: 1, 
+    borderColor: '#e2e8f0' 
   },
-  header: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#1e293b',
-    textAlign: 'center',
-    marginBottom: 8,
+  header: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    gap: 8, 
+    marginBottom: 8 
   },
-  subHeader: {
-    fontSize: 14,
-    color: '#64748b',
-    textAlign: 'center',
-    marginBottom: 24,
+  title: { 
+    fontSize: 18, 
+    fontWeight: 'bold', 
+    color: '#0f172a' 
   },
-  imagePlaceholder: {
-    height: 200,
-    backgroundColor: '#f1f5f9',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-    overflow: 'hidden', // This forces the image to respect the rounded corners
-    marginBottom: 24,
+  description: { 
+    fontSize: 14, 
+    color: '#64748b', 
+    marginBottom: 20 
   },
-  ticketImage: {
-    width: '100%',
-    height: '100%',
+  demoArea: { 
+    flexDirection: Platform.OS === 'web' ? 'row' : 'column', 
+    gap: 20, 
+    alignItems: 'center' 
   },
-  button: {
-    backgroundColor: '#2563eb',
-    paddingVertical: 14,
-    borderRadius: 8,
-    alignItems: 'center',
+  imageContainer: { 
+    flex: 1, 
+    width: '100%', 
+    height: 200, 
+    backgroundColor: '#f1f5f9', 
+    borderRadius: 8, 
+    overflow: 'hidden', 
+    borderWidth: 1, 
+    borderColor: '#e2e8f0' 
   },
-  buttonText: {
-    color: '#ffffff',
-    fontWeight: 'bold',
-    fontSize: 16,
+  ticketImage: { 
+    width: '100%', 
+    height: '100%' 
   },
-  loadingContainer: {
-    alignItems: 'center',
-    paddingVertical: 20,
+  actionContainer: { 
+    flex: 1, 
+    width: '100%', 
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    minHeight: 120 
   },
-  loadingText: {
-    marginTop: 12,
-    color: '#3b82f6',
-    fontWeight: '500',
+  scanButton: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    gap: 8, 
+    backgroundColor: '#0284c7', 
+    paddingHorizontal: 20, 
+    paddingVertical: 12, 
+    borderRadius: 8 
   },
-  resultsContainer: {
-    backgroundColor: '#f8fafc',
-    padding: 16,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
+  scanButtonText: { 
+    color: '#ffffff', 
+    fontWeight: 'bold', 
+    fontSize: 16 
   },
-  resultsHeader: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#10b981',
-    marginBottom: 16,
-    textAlign: 'center',
+  scanningState: { 
+    alignItems: 'center', 
+    gap: 12 
   },
-  table: {
-    marginBottom: 20,
+  scanningText: { 
+    color: '#0284c7', 
+    fontWeight: '600', 
+    fontSize: 14 
   },
-  dataRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e2e8f0',
+  resultsContainer: { 
+    width: '100%', 
+    gap: 8 
   },
-  label: {
-    fontWeight: '600',
-    color: '#475569',
+  resultBadge: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    backgroundColor: '#f0f9ff', 
+    padding: 12, 
+    borderRadius: 6, 
+    borderWidth: 1, 
+    borderColor: '#bae6fd' 
   },
-  value: {
-    color: '#0f172a',
+  resultLabel: { 
+    color: '#475569', 
+    fontSize: 13, 
+    fontWeight: '600' 
   },
-  resetButton: {
-    backgroundColor: '#e2e8f0',
-    paddingVertical: 10,
-    borderRadius: 6,
-    alignItems: 'center',
+  resultValue: { 
+    color: '#0369a1', 
+    fontSize: 14, 
+    fontWeight: 'bold' 
   },
-  resetButtonText: {
-    color: '#475569',
-    fontWeight: '600',
+  resetButton: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    gap: 6, 
+    marginTop: 12 
   },
+  resetText: { 
+    color: '#64748b', 
+    fontSize: 14, 
+    fontWeight: '600' 
+  }
 });
