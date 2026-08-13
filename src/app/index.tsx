@@ -1,5 +1,6 @@
 import { Link } from 'expo-router';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import CylinderForecaster from '../components/CylinderForecaster';
 import OcrDemo from '../components/OcrDemo';
 
 export default function LandingPage() {
@@ -26,8 +27,11 @@ export default function LandingPage() {
         </Text>
       </View>
 
-      {/* The Interactive Demo */}
-      <OcrDemo />
+      {/* The Interactive Demo Area */}
+      <View style={styles.demoSection}>
+        <OcrDemo />
+        <CylinderForecaster />
+      </View>
 
     </ScrollView>
   );
@@ -37,7 +41,7 @@ const styles = StyleSheet.create({
   scrollContainer: {
     flexGrow: 1,
     backgroundColor: '#f8fafc',
-    paddingBottom: 60,
+    paddingBottom: 80,
   },
   navBar: {
     flexDirection: 'row',
@@ -87,4 +91,10 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 28,
   },
+  demoSection: {
+    width: '100%',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    gap: 32, // This adds a clean space between the two widgets
+  }
 });
