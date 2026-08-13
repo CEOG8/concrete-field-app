@@ -30,13 +30,18 @@ export default function RootLayout() {
     if (initializing) return;
 
     const inAuthGroup = segments[0] === 'auth';
+    
+    // Define the public front door
+    const isLandingPage = segments.length === 0 || segments[0] === 'index' || pathname === '/';
 
-    if (!session && !inAuthGroup) {
+    // THE FIX: Allow unauthenticated users to stay on the landing page
+    if (!session && !inAuthGroup && !isLandingPage) {
       router.replace('/auth');
     } else if (session && inAuthGroup) {
-      router.replace('/');
+      // If they log in, send them straight to the history dashboard for now
+      router.replace('/history');
     }
-  }, [session, initializing, segments]);
+  }, [session, initializing, segments, pathname]);
 
   if (initializing) {
     return (
@@ -46,9 +51,12 @@ export default function RootLayout() {
     );
   }
 
+  // Hide the secure enterprise navigation bar if we are on the public landing page or auth page
+  const showSecureNavBar = session && pathname !== '/auth' && pathname !== '/' && pathname !== '/index';
+
   return (
     <View style={{ flex: 1, backgroundColor: '#0f172a' }}>
-      {session && pathname !== '/auth' && (
+      {showSecureNavBar && (
         <View style={styles.header}>
           <View style={styles.logoRow}>
             <View style={styles.iconWrapper}>
@@ -59,11 +67,11 @@ export default function RootLayout() {
 
           <View style={styles.navLinks}>
             <TouchableOpacity
-              style={[styles.navItem, (pathname === '/' || pathname === '/index') && styles.navItemActive]}
-              onPress={() => router.push('/')}
+              style={[styles.navItem, pathname === '/new-ticket' && styles.navItemActive]}
+              onPress={() => router.push('/new-ticket')}
             >
-              <Ionicons name="add-circle" size={16} color={(pathname === '/' || pathname === '/index') ? '#0f172a' : '#64748b'} />
-              {Platform.OS === 'web' && <Text style={[styles.navText, (pathname === '/' || pathname === '/index') && styles.navTextActive]}>New Ticket</Text>}
+              <Ionicons name="add-circle" size={16} color={pathname === '/new-ticket' ? '#0f172a' : '#64748b'} />
+              {Platform.OS === 'web' && <Text style={[styles.navText, pathname === '/new-ticket' && styles.navTextActive]}>New Ticket</Text>}
             </TouchableOpacity>
 
             <TouchableOpacity
