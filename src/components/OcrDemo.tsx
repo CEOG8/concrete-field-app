@@ -27,9 +27,9 @@ export default function OcrDemo() {
 
       <View style={styles.demoArea}>
         <View style={styles.imageContainer}>
-          {/* THE SILVER BULLET: Remote Web URI bypasses Vercel's local file checks */}
+          {/* THE REAL LOCAL TICKET IMAGE IS BACK */}
           <Image 
-            source={{ uri: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=800&q=80' }} 
+            source={require('../../assets/images/ticket-sample.png')} 
             style={styles.ticketImage}
             resizeMode="cover"
           />
