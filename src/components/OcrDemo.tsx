@@ -7,6 +7,9 @@ export default function OcrDemo() {
   const [isScanning, setIsScanning] = useState(false);
   const [hasScanned, setHasScanned] = useState(false);
   const [customImageUri, setCustomImageUri] = useState<string | null>(null);
+  
+  // State to hold our believable "fake" data for custom uploads
+  const [mockData, setMockData] = useState({ ticket: '', slump: '', truck: '' });
 
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -17,12 +20,22 @@ export default function OcrDemo() {
 
     if (!result.canceled) {
       setCustomImageUri(result.assets[0].uri);
-      setHasScanned(false); // Reset the scan results when a new image is loaded
+      setHasScanned(false);
     }
   };
 
   const handleScan = () => {
     setIsScanning(true);
+    
+    // Generate random, realistic concrete data if it's a custom image
+    if (customImageUri) {
+      setMockData({
+        ticket: `TC-${Math.floor(10000 + Math.random() * 90000)}`, // e.g., TC-48291
+        slump: `${(3 + Math.random() * 4).toFixed(1)} in`, // e.g., 4.2 in
+        truck: `#${Math.floor(10 + Math.random() * 89)}` // e.g., #42
+      });
+    }
+
     setTimeout(() => {
       setIsScanning(false);
       setHasScanned(true);
@@ -31,7 +44,7 @@ export default function OcrDemo() {
 
   const resetDemo = () => {
     setHasScanned(false);
-    setCustomImageUri(null); // Optional: Clears their image and goes back to default
+    setCustomImageUri(null);
   };
 
   return (
@@ -55,7 +68,6 @@ export default function OcrDemo() {
             />
           </View>
           
-          {/* New button to let users upload their own trial image */}
           <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
             <Ionicons name="cloud-upload-outline" size={16} color="#0284c7" />
             <Text style={styles.uploadText}>Upload Your Own Ticket</Text>
@@ -81,15 +93,15 @@ export default function OcrDemo() {
             <View style={styles.resultsContainer}>
               <View style={styles.resultBadge}>
                 <Text style={styles.resultLabel}>Ticket:</Text>
-                <Text style={styles.resultValue}>{customImageUri ? 'TC-CUSTOM' : 'TC-99420'}</Text>
+                <Text style={styles.resultValue}>{customImageUri ? mockData.ticket : 'TC-99420'}</Text>
               </View>
               <View style={styles.resultBadge}>
                 <Text style={styles.resultLabel}>Slump:</Text>
-                <Text style={styles.resultValue}>{customImageUri ? 'Analyzed' : '4.5 in'}</Text>
+                <Text style={styles.resultValue}>{customImageUri ? mockData.slump : '4.5 in'}</Text>
               </View>
               <View style={styles.resultBadge}>
                 <Text style={styles.resultLabel}>Truck:</Text>
-                <Text style={styles.resultValue}>{customImageUri ? 'Detected' : '#42'}</Text>
+                <Text style={styles.resultValue}>{customImageUri ? mockData.truck : '#42'}</Text>
               </View>
               
               <TouchableOpacity style={styles.resetButton} onPress={resetDemo}>
