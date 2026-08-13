@@ -1,22 +1,18 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Session } from '@supabase/supabase-js';
-import { Stack, usePathname, useRouter, useSegments } from 'expo-router';
+import { Stack, usePathname, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { supabase } from '../../supabase';
 
 export default function RootLayout() {
   const [session, setSession] = useState<Session | null>(null);
-  const [initializing, setInitializing] = useState(true);
-  
   const router = useRouter();
-  const segments = useSegments();
   const pathname = usePathname();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
-      setInitializing(false);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -26,32 +22,7 @@ export default function RootLayout() {
     return () => subscription.unsubscribe();
   }, []);
 
-  useEffect(() => {
-    if (initializing) return;
-
-    const inAuthGroup = segments[0] === 'auth';
-    
-    // Define the public front door
-    const isLandingPage = segments.length === 0 || segments[0] === 'index' || pathname === '/';
-
-    // THE FIX: Allow unauthenticated users to stay on the landing page
-    if (!session && !inAuthGroup && !isLandingPage) {
-      router.replace('/auth');
-    } else if (session && inAuthGroup) {
-      // If they log in, send them straight to the history dashboard for now
-      router.replace('/history');
-    }
-  }, [session, initializing, segments, pathname]);
-
-  if (initializing) {
-    return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color="#2563eb" />
-      </View>
-    );
-  }
-
-  // Hide the secure enterprise navigation bar if we are on the public landing page or auth page
+  // Hide the secure navigation bar if we are on the public landing page or auth page
   const showSecureNavBar = session && pathname !== '/auth' && pathname !== '/' && pathname !== '/index';
 
   return (
@@ -83,7 +54,10 @@ export default function RootLayout() {
             </TouchableOpacity>
           </View>
 
-          <TouchableOpacity style={styles.logoutBtn} onPress={async () => await supabase.auth.signOut()}>
+          <TouchableOpacity style={styles.logoutBtn} onPress={async () => {
+            await supabase.auth.signOut();
+            router.replace('/auth');
+          }}>
             <Ionicons name="log-out-outline" size={20} color="#64748b" />
           </TouchableOpacity>
         </View>
@@ -101,7 +75,6 @@ export default function RootLayout() {
 }
 
 const styles = StyleSheet.create({
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#0f172a' },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
