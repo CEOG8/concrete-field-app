@@ -1,10 +1,25 @@
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import { useState } from 'react';
 import { ActivityIndicator, Image, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function OcrDemo() {
   const [isScanning, setIsScanning] = useState(false);
   const [hasScanned, setHasScanned] = useState(false);
+  const [customImageUri, setCustomImageUri] = useState<string | null>(null);
+
+  const pickImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: false,
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      setCustomImageUri(result.assets[0].uri);
+      setHasScanned(false); // Reset the scan results when a new image is loaded
+    }
+  };
 
   const handleScan = () => {
     setIsScanning(true);
@@ -12,6 +27,11 @@ export default function OcrDemo() {
       setIsScanning(false);
       setHasScanned(true);
     }, 2000);
+  };
+
+  const resetDemo = () => {
+    setHasScanned(false);
+    setCustomImageUri(null); // Optional: Clears their image and goes back to default
   };
 
   return (
@@ -22,17 +42,24 @@ export default function OcrDemo() {
       </View>
       
       <Text style={styles.description}>
-        Watch how TEPUY QC instantly digitizes crumpled, stained paper tickets from the field.
+        Watch how TEPUY QC instantly digitizes paper tickets. Upload a test image from your device to see it in action!
       </Text>
 
       <View style={styles.demoArea}>
-        <View style={styles.imageContainer}>
-          {/* THE REAL LOCAL TICKET IMAGE IS BACK */}
-          <Image 
-            source={require('../../assets/images/ticket-sample.png')} 
-            style={styles.ticketImage}
-            resizeMode="cover"
-          />
+        <View style={styles.imageColumn}>
+          <View style={styles.imageContainer}>
+            <Image 
+              source={customImageUri ? { uri: customImageUri } : require('../../assets/images/ticket-sample.png')} 
+              style={styles.ticketImage}
+              resizeMode="cover"
+            />
+          </View>
+          
+          {/* New button to let users upload their own trial image */}
+          <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
+            <Ionicons name="cloud-upload-outline" size={16} color="#0284c7" />
+            <Text style={styles.uploadText}>Upload Your Own Ticket</Text>
+          </TouchableOpacity>
         </View>
 
         <View style={styles.actionContainer}>
@@ -54,20 +81,20 @@ export default function OcrDemo() {
             <View style={styles.resultsContainer}>
               <View style={styles.resultBadge}>
                 <Text style={styles.resultLabel}>Ticket:</Text>
-                <Text style={styles.resultValue}>TC-99420</Text>
+                <Text style={styles.resultValue}>{customImageUri ? 'TC-CUSTOM' : 'TC-99420'}</Text>
               </View>
               <View style={styles.resultBadge}>
                 <Text style={styles.resultLabel}>Slump:</Text>
-                <Text style={styles.resultValue}>4.5 in</Text>
+                <Text style={styles.resultValue}>{customImageUri ? 'Analyzed' : '4.5 in'}</Text>
               </View>
               <View style={styles.resultBadge}>
                 <Text style={styles.resultLabel}>Truck:</Text>
-                <Text style={styles.resultValue}>#42</Text>
+                <Text style={styles.resultValue}>{customImageUri ? 'Detected' : '#42'}</Text>
               </View>
               
-              <TouchableOpacity style={styles.resetButton} onPress={() => setHasScanned(false)}>
+              <TouchableOpacity style={styles.resetButton} onPress={resetDemo}>
                 <Ionicons name="refresh" size={16} color="#64748b" />
-                <Text style={styles.resetText}>Reset</Text>
+                <Text style={styles.resetText}>Reset Trial</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -83,8 +110,11 @@ const styles = StyleSheet.create({
   title: { fontSize: 18, fontWeight: 'bold', color: '#0f172a' },
   description: { fontSize: 14, color: '#64748b', marginBottom: 20 },
   demoArea: { flexDirection: Platform.OS === 'web' ? 'row' : 'column', gap: 20, alignItems: 'center' },
-  imageContainer: { flex: 1, width: '100%', height: 200, backgroundColor: '#f1f5f9', borderRadius: 8, overflow: 'hidden', borderWidth: 1, borderColor: '#e2e8f0' },
+  imageColumn: { flex: 1, width: '100%', gap: 12 },
+  imageContainer: { width: '100%', height: 200, backgroundColor: '#f1f5f9', borderRadius: 8, overflow: 'hidden', borderWidth: 1, borderColor: '#e2e8f0' },
   ticketImage: { width: '100%', height: '100%' },
+  uploadButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 8, backgroundColor: '#f0f9ff', borderRadius: 6, borderWidth: 1, borderColor: '#bae6fd' },
+  uploadText: { color: '#0284c7', fontSize: 13, fontWeight: '600' },
   actionContainer: { flex: 1, width: '100%', justifyContent: 'center', alignItems: 'center', minHeight: 120 },
   scanButton: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#0284c7', paddingHorizontal: 20, paddingVertical: 12, borderRadius: 8 },
   scanButtonText: { color: '#ffffff', fontWeight: 'bold', fontSize: 16 },
