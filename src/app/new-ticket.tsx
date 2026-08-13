@@ -95,6 +95,6 @@ const styles = StyleSheet.create({
     width: '100%',
     alignItems: 'center',
     paddingHorizontal: 16,
-    gap: 32,
+    gap: 32, // This adds a clean space between the two widgets
   }
 });
