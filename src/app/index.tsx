@@ -11,7 +11,6 @@ export default function LandingPage() {
       <View style={styles.navBar}>
         <Text style={styles.logoText}>TEPUY QC</Text>
         
-        {/* The bridge to your secure portal */}
         <Link href="/auth" asChild>
           <TouchableOpacity style={styles.loginButton}>
             <Text style={styles.loginButtonText}>Enterprise Login</Text>
