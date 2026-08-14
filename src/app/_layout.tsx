@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Session } from '@supabase/supabase-js';
 import { Stack, usePathname, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Image, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { supabase } from '../../supabase';
 
 export default function RootLayout() {
@@ -28,7 +28,6 @@ export default function RootLayout() {
   useEffect(() => {
     if (initializing) return;
 
-    // Web-safe route matching (Bypasses Expo segments bug)
     const inAuthGroup = pathname === '/auth';
     const isLandingPage = pathname === '/' || pathname === '/index' || pathname === '';
 
@@ -47,7 +46,6 @@ export default function RootLayout() {
     );
   }
 
-  // Only show the enterprise navigation bar if the user is securely logged in
   const showSecureNavBar = session && pathname !== '/auth' && pathname !== '/' && pathname !== '/index' && pathname !== '';
 
   return (
@@ -55,10 +53,11 @@ export default function RootLayout() {
       {showSecureNavBar && (
         <View style={styles.header}>
           <View style={styles.logoRow}>
-            <View style={styles.iconWrapper}>
-               <Ionicons name="shield-checkmark" size={18} color="#ffffff" />
-            </View>
-            <Text style={styles.headerTitle}>TEPUY QC</Text>
+            <Image 
+              source={require('../../assets/images/logo.png')} 
+              style={{ width: 150, height: 40 }} 
+              resizeMode="contain" 
+            />
           </View>
 
           <View style={styles.navLinks}>
@@ -103,9 +102,7 @@ export default function RootLayout() {
 const styles = StyleSheet.create({
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#0f172a' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#ffffff', paddingHorizontal: 24, paddingVertical: 12, paddingTop: Platform.OS === 'web' ? 12 : 48, borderBottomWidth: 1, borderBottomColor: '#e2e8f0' },
-  logoRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  iconWrapper: { backgroundColor: '#2563eb', padding: 4, borderRadius: 8 },
-  headerTitle: { color: '#0f172a', fontSize: 20, fontWeight: '900', letterSpacing: 0.5 },
+  logoRow: { flexDirection: 'row', alignItems: 'center' },
   navLinks: { flexDirection: 'row', gap: 8, backgroundColor: '#f1f5f9', padding: 4, borderRadius: 12 },
   navItem: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 8, paddingHorizontal: 16, borderRadius: 8 },
   navItemActive: { backgroundColor: '#ffffff', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 2 },

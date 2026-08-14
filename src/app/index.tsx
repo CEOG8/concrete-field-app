@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { Animated, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Animated, Image, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import OcrDemo from '../components/OcrDemo';
 
 export default function LandingPage() {
@@ -15,7 +15,6 @@ export default function LandingPage() {
   const slideAnim = useRef(new Animated.Value(40)).current;
 
   useEffect(() => {
-    // Reset and trigger smooth entrance animation on load/tab switch
     fadeAnim.setValue(0);
     slideAnim.setValue(40);
 
@@ -45,11 +44,12 @@ export default function LandingPage() {
     <View style={styles.container}>
       {/* Sleek Enterprise Navigation Bar */}
       <View style={styles.navbar}>
-        <TouchableOpacity style={styles.logoRow} onPress={() => setActiveTab('home')} activeOpacity={0.8}>
-          <View style={styles.iconWrapper}>
-            <Ionicons name="shield-checkmark" size={20} color="#ffffff" />
-          </View>
-          <Text style={styles.logoText}>TEPUY QC</Text>
+        <TouchableOpacity style={styles.logoContainer} onPress={() => setActiveTab('home')} activeOpacity={0.8}>
+          <Image 
+            source={require('../../assets/images/logo.png')} 
+            style={styles.logoImage} 
+            resizeMode="contain" 
+          />
         </TouchableOpacity>
 
         <View style={styles.navMenu}>
@@ -99,7 +99,6 @@ export default function LandingPage() {
                   <Text style={styles.badgeText}>Next-Gen Construction Quality Control</Text>
                 </View>
                 
-                {/* Massive, bold typography statement */}
                 <Text style={styles.heroTitle}>Digitize Your Concrete Testing.</Text>
                 <Text style={styles.heroSubtitle}>
                   Eliminate manual paperwork, eradicate transcription errors, and sync field data directly into your secure cloud database in seconds.
@@ -255,7 +254,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     backgroundColor: '#ffffff',
     paddingHorizontal: 32,
-    paddingVertical: 16,
+    paddingVertical: 14,
     borderBottomWidth: 1,
     borderBottomColor: '#e2e8f0',
     shadowColor: '#000',
@@ -264,9 +263,8 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 2,
   },
-  logoRow: { flexDirection: 'row', alignItems: 'center', gap: 10, cursor: 'pointer' as any },
-  iconWrapper: { backgroundColor: '#0284c7', padding: 6, borderRadius: 8 },
-  logoText: { color: '#0f172a', fontSize: 22, fontWeight: '900', letterSpacing: 0.8 },
+  logoContainer: { cursor: 'pointer' as any },
+  logoImage: { width: 170, height: 44 },
   navMenu: { flexDirection: 'row', gap: 8, backgroundColor: '#f1f5f9', padding: 4, borderRadius: 10 },
   navLink: { paddingVertical: 8, paddingHorizontal: 18, borderRadius: 8 },
   navLinkActive: { backgroundColor: '#ffffff', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.08, shadowRadius: 3, elevation: 1 },
