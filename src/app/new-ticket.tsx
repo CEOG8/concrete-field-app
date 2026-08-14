@@ -4,21 +4,19 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, Alert, Platform, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { createWorker } from 'tesseract.js';
-import { supabase } from '../../supabase'; // Ensure this path points to your Supabase client
+import { supabase } from '../../supabase';
 
 export default function NewTicket() {
   const router = useRouter();
   const [isScanning, setIsScanning] = useState(false);
   const [scanStatus, setScanStatus] = useState('');
   
-  // Form State
   const [projectNumber, setProjectNumber] = useState('');
   const [ticketNumber, setTicketNumber] = useState('');
   const [truckNumber, setTruckNumber] = useState('');
   const [slump, setSlump] = useState('');
   const [temperature, setTemperature] = useState('');
   
-  // Cylinders State
   const [castCylinders, setCastCylinders] = useState(false);
   const [numberOfCylinders, setNumberOfCylinders] = useState('4');
 
@@ -33,11 +31,10 @@ export default function NewTicket() {
       if (result.canceled) return;
 
       setIsScanning(true);
-      setScanStatus('Initializing OCR Engine...');
+      setScanStatus('Initializing Engine...');
 
       const imageUri = result.assets[0].uri;
 
-      // Web requires CDN workers to bypass browser security, Native can use default
       const workerOptions = Platform.OS === 'web' ? {
         workerPath: 'https://unpkg.com/tesseract.js@v5.0.0/dist/worker.min.js',
         corePath: 'https://unpkg.com/tesseract.js-core@v5.0.0/tesseract-core.wasm.js',
@@ -45,36 +42,52 @@ export default function NewTicket() {
 
       const worker = await createWorker('eng', 1, workerOptions);
       
-      setScanStatus('Scanning ticket data...');
+      setScanStatus('Extracting field data...');
       const ret = await worker.recognize(imageUri);
       await worker.terminate();
 
-      const text = ret.data.text;
-      console.log("Raw OCR Text:", text); // For debugging in your console
+      const rawText = ret.data.text;
+      console.log("RAW OCR DUMP:\n", rawText);
 
-      // --- ADVANCED CONCRETE TICKET PARSING REGEX ---
-      
-      // 1. Find Truck Number (e.g., "Truck 76", "Truck: 76", "Trk 42")
-      const truckMatch = text.match(/(?:Truck|Trk)[\s:]*([0-9]+)/i);
-      if (truckMatch && truckMatch[1]) setTruckNumber(truckMatch[1]);
+      // --- ADVANCED GRID-AWARE TICKET PARSING ---
+      const flatText = rawText.replace(/\n/g, ' ').replace(/\s+/g, ' ');
 
-      // 2. Find Slump (e.g., "Slump: 6.00 in", "Slump 4.5")
-      const slumpMatch = text.match(/Slump[\s:]*([0-9.]+)/i);
-      if (slumpMatch && slumpMatch[1]) setSlump(slumpMatch[1]);
-
-      // 3. Find Temperature (e.g., "Temp: 82F", "Temperature 80")
-      const tempMatch = text.match(/Temp(?:erature)?[\s:]*([0-9.]+)/i);
-      if (tempMatch && tempMatch[1]) setTemperature(tempMatch[1]);
-
-      // 4. Find Ticket/Load Number (Usually a prominent 5 or 6 digit number)
-      const ticketMatch = text.match(/Ticket[\s:]*([0-9A-Z-]+)/i) || text.match(/Load[\s:]*([0-9]{4,})/i);
+      // 1. Ticket Number: Added "SLIP NO", allowing for grid separation
+      // Looks for Ticket, Load, or Slip, then finds a 5-8 digit number
+      const ticketMatch = flatText.match(/(?:ticket|tkt|order|load no|slip no)[\s\.a-z]*([0-9]{5,8})/i);
       if (ticketMatch && ticketMatch[1]) {
         setTicketNumber(ticketMatch[1]);
       } else {
-        // Fallback: Grab the first 5+ digit number found
-        const fallbackTicket = text.match(/\b([0-9]{5,})\b/);
-        if (fallbackTicket && fallbackTicket[1]) setTicketNumber(fallbackTicket[1]);
+        // Safe Fallback: Grab the last massive 5+ digit isolated number (usually at bottom right)
+        const possibleTickets = flatText.match(/\b([0-9]{5,8})\b/g);
+        if (possibleTickets && possibleTickets.length > 0) {
+          setTicketNumber(possibleTickets[possibleTickets.length - 1]);
+        }
       }
+
+      // 2. Slump: The Shape Finder
+      // Concrete grids separate "SLUMP" from "5.0". So we look for the signature decimal shape!
+      // This hunts for exact concrete slump formats (e.g., 4.0, 5.5, 6.00) anywhere near the word slump.
+      const slumpMatch = flatText.match(/(?:slump|siump|5lump)[^\d]{0,100}?\b([1-9](?:\.[0-9]{1,2})?)\b/i);
+      if (slumpMatch && slumpMatch[1]) {
+        setSlump(slumpMatch[1]);
+      } else {
+        // Extreme Fallback: Scan the whole ticket for an isolated decimal between 2.0 and 10.0
+        const decimals = flatText.match(/\b([2-9]\.[0-9]{1,2})\b/);
+        if (decimals && decimals[1]) setSlump(decimals[1]);
+      }
+
+      // 3. Truck Number: Gap Jumper
+      // Allows up to 100 characters of garbage between "TRUCK NO" and "76" to cross the grid lines.
+      // Ignores dates (like 16-Aug) and only pulls 1-3 digit numbers.
+      const truckMatch = flatText.match(/(?:truck|trk|trck)[a-z\s\.:]{0,100}?\b(\d{1,3})\b/i);
+      if (truckMatch && truckMatch[1]) {
+        setTruckNumber(truckMatch[1]);
+      }
+
+      // 4. Temperature
+      const tempMatch = flatText.match(/(?:temp|temperature)[a-z\s\.:]{0,100}?\b(\d{2,3}(?:\.\d+)?)\b/i);
+      if (tempMatch && tempMatch[1]) setTemperature(tempMatch[1]);
 
       setIsScanning(false);
       setScanStatus('');
@@ -100,7 +113,6 @@ export default function NewTicket() {
         return;
       }
 
-      // Save to Supabase (Adjust table name 'tickets' to match your actual database schema)
       const { error } = await supabase.from('tickets').insert([{
         user_id: user.id,
         project_number: projectNumber,
@@ -135,7 +147,6 @@ export default function NewTicket() {
           </View>
         </View>
 
-        {/* OCR SCAN BUTTON */}
         <TouchableOpacity style={styles.scanButton} onPress={handleScan} disabled={isScanning}>
           {isScanning ? (
             <View style={styles.scanningRow}>
@@ -150,7 +161,6 @@ export default function NewTicket() {
           )}
         </TouchableOpacity>
 
-        {/* FORM FIELDS */}
         <View style={styles.formGroup}>
           <Text style={styles.label}>Project Number</Text>
           <TextInput style={styles.input} placeholder="e.g., TEP-2026-01" value={projectNumber} onChangeText={setProjectNumber} />
@@ -178,7 +188,6 @@ export default function NewTicket() {
           </View>
         </View>
 
-        {/* CYLINDER TOGGLE */}
         <View style={styles.cylinderBox}>
           <View style={styles.cylinderHeader}>
             <View style={styles.cylinderTitleRow}>
@@ -197,7 +206,6 @@ export default function NewTicket() {
           )}
         </View>
 
-        {/* SUBMIT BUTTON */}
         <TouchableOpacity style={styles.submitBtn} onPress={handleSubmit}>
           <Text style={styles.submitBtnText}>Submit Ticket & Cylinders</Text>
         </TouchableOpacity>
@@ -214,23 +222,19 @@ const styles = StyleSheet.create({
   iconBox: { backgroundColor: '#0284c7', padding: 12, borderRadius: 12 },
   title: { fontSize: 24, fontWeight: 'bold', color: '#0f172a' },
   subtitle: { fontSize: 14, color: '#64748b' },
-  
   scanButton: { backgroundColor: '#f0f9ff', borderWidth: 1, borderColor: '#bae6fd', borderStyle: 'dashed', borderRadius: 8, paddingVertical: 16, alignItems: 'center', marginBottom: 24 },
   scanningRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   scanButtonText: { color: '#0284c7', fontSize: 16, fontWeight: '600' },
-
   formGroup: { marginBottom: 20 },
   row: { flexDirection: Platform.OS === 'web' ? 'row' : 'column', gap: 16 },
   label: { fontSize: 13, fontWeight: '600', color: '#475569', marginBottom: 8 },
   input: { backgroundColor: '#ffffff', borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 8, paddingHorizontal: 16, paddingVertical: 12, fontSize: 15, color: '#0f172a' },
-
   cylinderBox: { backgroundColor: '#f8fafc', borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 8, padding: 20, marginBottom: 24 },
   cylinderHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   cylinderTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   cylinderTitle: { fontSize: 15, fontWeight: 'bold', color: '#0284c7' },
   cylinderDetails: { marginTop: 16, paddingTop: 16, borderTopWidth: 1, borderTopColor: '#e2e8f0' },
   helperText: { fontSize: 12, color: '#64748b', marginTop: 8 },
-
   submitBtn: { backgroundColor: '#0284c7', paddingVertical: 16, borderRadius: 8, alignItems: 'center' },
   submitBtnText: { color: '#ffffff', fontSize: 16, fontWeight: 'bold' }
 });
