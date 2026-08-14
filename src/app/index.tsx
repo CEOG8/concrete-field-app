@@ -133,11 +133,13 @@ export default function LandingPage() {
                   <View style={[styles.forecasterBody, isMobile && { flexDirection: 'column' }]}>
                     <View style={styles.forecasterInputs}>
                       <View style={styles.inputGroup}>
-                        <Text style={styles.inputLabel}>7-Day Break Result (psi)</Text>
+                        {/* FIXED: Using forecasterInputLabel */}
+                        <Text style={styles.forecasterInputLabel}>7-Day Break Result (psi)</Text>
                         <TextInput style={styles.forecasterInput} keyboardType="numeric" value={sevenDayPsi} onChangeText={setSevenDayPsi} placeholder="e.g. 3200" />
                       </View>
                       <View style={styles.inputGroup}>
-                        <Text style={styles.inputLabel}>Avg Curing Temperature (°F)</Text>
+                        {/* FIXED: Using forecasterInputLabel */}
+                        <Text style={styles.forecasterInputLabel}>Avg Curing Temperature (°F)</Text>
                         <TextInput style={styles.forecasterInput} keyboardType="numeric" value={curingTemp} onChangeText={setCuringTemp} placeholder="e.g. 78" />
                       </View>
                     </View>
@@ -202,12 +204,18 @@ export default function LandingPage() {
                   </View>
                 ) : (
                   <>
-                    <Text style={styles.inputLabel}>Your Name</Text>
+                    {/* FIXED: Using contactInputLabel */}
+                    <Text style={styles.contactInputLabel}>Your Name</Text>
                     <TextInput style={styles.textInput} placeholder="e.g., Sarah Jenkins" value={contactForm.name} onChangeText={(val) => setContactForm({ ...contactForm, name: val })} />
-                    <Text style={styles.inputLabel}>Work Email *</Text>
+                    
+                    {/* FIXED: Using contactInputLabel */}
+                    <Text style={styles.contactInputLabel}>Work Email *</Text>
                     <TextInput style={styles.textInput} placeholder="e.g., s.jenkins@engineering.com" value={contactForm.email} onChangeText={(val) => setContactForm({ ...contactForm, email: val })} />
-                    <Text style={styles.inputLabel}>Message *</Text>
+                    
+                    {/* FIXED: Using contactInputLabel */}
+                    <Text style={styles.contactInputLabel}>Message *</Text>
                     <TextInput style={[styles.textInput, { height: 120, textAlignVertical: 'top' }]} placeholder="Tell us about your project or inquiry..." multiline value={contactForm.message} onChangeText={(val) => setContactForm({ ...contactForm, message: val })} />
+                    
                     <TouchableOpacity style={styles.submitButton} onPress={handleContactSubmit} activeOpacity={0.9}>
                       <Text style={styles.submitButtonText}>Send Message</Text>
                       <Ionicons name="send" size={16} color="#ffffff" />
@@ -269,7 +277,10 @@ const styles = StyleSheet.create({
   forecasterBody: { flexDirection: 'row', gap: 24, alignItems: 'center' },
   forecasterInputs: { flex: 1, width: '100%', gap: 16 },
   inputGroup: { width: '100%' },
-  inputLabel: { fontSize: 13, fontWeight: '600', color: '#475569', marginBottom: 6 },
+  
+  // FIXED: Renamed this to forecasterInputLabel
+  forecasterInputLabel: { fontSize: 13, fontWeight: '600', color: '#475569', marginBottom: 6 },
+  
   forecasterInput: { backgroundColor: '#f8fafc', borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 8, paddingHorizontal: 14, paddingVertical: 10, fontSize: 15, color: '#0f172a', fontWeight: 'bold' },
   forecasterResultBox: { flex: 1, width: '100%', backgroundColor: '#f8fafc', borderRadius: 12, padding: 20, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#e2e8f0' },
   resultHeaderTitle: { fontSize: 13, fontWeight: '600', color: '#64748b', marginBottom: 4 },
@@ -294,7 +305,10 @@ const styles = StyleSheet.create({
   statLabel: { fontSize: 13, color: '#64748b', fontWeight: '600' },
 
   contactFormCard: { backgroundColor: '#ffffff', padding: 36, borderRadius: 20, borderWidth: 1, borderColor: '#e2e8f0', shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.06, shadowRadius: 16 },
-  inputLabel: { fontSize: 14, fontWeight: '600', color: '#334155', marginBottom: 6, marginTop: 16 },
+  
+  // FIXED: Renamed this to contactInputLabel
+  contactInputLabel: { fontSize: 14, fontWeight: '600', color: '#334155', marginBottom: 6, marginTop: 16 },
+  
   textInput: { backgroundColor: '#f8fafc', borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 8, paddingHorizontal: 16, paddingVertical: 12, fontSize: 15, color: '#0f172a' },
   submitButton: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8, backgroundColor: '#0284c7', paddingVertical: 14, borderRadius: 8, marginTop: 28 },
   submitButtonText: { color: '#ffffff', fontSize: 16, fontWeight: 'bold' },
